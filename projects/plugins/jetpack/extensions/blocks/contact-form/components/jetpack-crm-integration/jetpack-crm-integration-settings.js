@@ -17,6 +17,7 @@ const fetchCRMData = ( setHasCRMDataError, setCRMData, setIsFetchingCRMData ) =>
 	} )
 		.then( result => {
 			if ( result.error ) {
+				setHasCRMDataError( true );
 				throw result.message;
 			}
 			setHasCRMDataError( false );
