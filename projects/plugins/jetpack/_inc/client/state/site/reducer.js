@@ -18,6 +18,7 @@ import {
 	isJetpackVideoPress,
 	isJetpackAntiSpam,
 	isSecurityComparableJetpackLegacyPlan,
+	isSecurityPlanExcludingVideoPress,
 } from 'lib/plans/constants';
 import {
 	JETPACK_SITE_DATA_FETCH,
@@ -436,13 +437,17 @@ export function getActiveVideoPressPurchase( state ) {
 }
 
 /**
- * Determines if the site has an active VideoPress product purchase
+ * Determines if the site has an active VideoPress feature and excludes the VideoPress feature from Security plans
+ * purchased after a certain date.
  *
  * @param {*} state - Global state tree
  * @returns {boolean} True if the site has an active VideoPress product purchase, false otherwise.
  */
-export function hasActiveVideoPressPurchase( state ) {
-	return !! getActiveVideoPressPurchase( state );
+export function hasActiveVideoPressFeature( state ) {
+	return (
+		hasActiveSiteFeature( state, 'videopress' ) &&
+		! getSitePurchases( state ).find( isSecurityPlanExcludingVideoPress )
+	);
 }
 
 /**
