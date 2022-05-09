@@ -11,12 +11,14 @@ import { ExternalLink } from '@wordpress/components';
 /**
  * Internal dependencies
  */
+import DiscountCard from '../../sidebar/discount-card';
 import {
 	getStepContent,
 	mapStateToSummaryFeatureProps,
 	mapDispatchToProps,
 } from '../../feature-utils';
 import { PromptLayout } from '../prompt-layout';
+import { DEFAULT_ILLUSTRATION } from '../../constants';
 import { ProductSpotlight } from '../../sidebar/product-spotlight';
 import Button from 'components/button';
 import analytics from 'lib/analytics';
@@ -28,12 +30,13 @@ import {
 	getNextRoute,
 	getStep,
 	isUpdatingRecommendationsStep,
+	recommendationsSiteDiscountViewedStep,
+	isProductSuggestionsAvailable,
 	isFeatureActive,
 	isStepViewed,
 	getProductSlugForStep,
 } from 'state/recommendations';
 import Gridicon from 'components/gridicon';
-
 const FeaturePromptComponent = props => {
 	const {
 		activateFeature,
@@ -43,8 +46,7 @@ const FeaturePromptComponent = props => {
 		ctaText,
 		description,
 		descriptionLink,
-		illustrationPath,
-		rnaIllustration,
+		illustration,
 		nextRoute,
 		progressValue,
 		question,
@@ -54,6 +56,8 @@ const FeaturePromptComponent = props => {
 		updateRecommendationsStep,
 		spotlightProduct,
 		isNew,
+		canShowProductSuggestions,
+		discountViewedStep,
 		featureActive,
 		configureButtonLabel,
 		configLink,
@@ -67,6 +71,9 @@ const FeaturePromptComponent = props => {
 			updateRecommendationsStep( stepSlug );
 		} else if ( stepSlug === stateStepSlug && ! updatingStep ) {
 			addViewedRecommendation( stepSlug );
+			analytics.tracks.recordEvent( 'jetpack_recommendations_recommendation_viewed', {
+				feature: stepSlug,
+			} );
 		}
 	}, [
 		stepSlug,
@@ -75,6 +82,9 @@ const FeaturePromptComponent = props => {
 		updateRecommendationsStep,
 		addViewedRecommendation,
 	] );
+
+	// Show card if it hasn't been viewed yet, or if it has been viewed at this step already.
+	const showDiscountCard = ! discountViewedStep || discountViewedStep === stepSlug;
 
 	const onExternalLinkClick = useCallback( () => {
 		analytics.tracks.recordEvent( 'jetpack_recommended_feature_learn_more_click', {
@@ -112,6 +122,14 @@ const FeaturePromptComponent = props => {
 	const configLinkIsExternal = useMemo( () => {
 		return configLink.match( /^https:\/\/jetpack.com\/redirect/ );
 	}, [ configLink ] );
+
+	let sidebarCard = null;
+
+	if ( spotlightProduct ) {
+		sidebarCard = <ProductSpotlight productSlug={ spotlightProduct } stepSlug={ stepSlug } />;
+	} else if ( showDiscountCard && canShowProductSuggestions ) {
+		sidebarCard = <DiscountCard />;
+	}
 
 	return (
 		<PromptLayout
@@ -173,13 +191,8 @@ const FeaturePromptComponent = props => {
 					</div>
 				</div>
 			}
-			illustrationPath={ ! spotlightProduct ? illustrationPath : null }
-			sidebarCard={
-				spotlightProduct ? (
-					<ProductSpotlight productSlug={ spotlightProduct } stepSlug={ stepSlug } />
-				) : null
-			}
-			rna={ rnaIllustration }
+			sidebarCard={ sidebarCard }
+			illustration={ illustration || DEFAULT_ILLUSTRATION }
 		/>
 	);
 };
@@ -191,6 +204,8 @@ const FeaturePrompt = connect(
 		...mapStateToSummaryFeatureProps( state, ownProps.stepSlug ),
 		stateStepSlug: getStep( state ),
 		updatingStep: isUpdatingRecommendationsStep( state ),
+		canShowProductSuggestions: isProductSuggestionsAvailable( state ),
+		discountViewedStep: recommendationsSiteDiscountViewedStep( state ),
 		featureActive: isFeatureActive( state, ownProps.stepSlug ),
 		summaryViewed: isStepViewed( state, 'summary' ),
 		spotlightProduct: getProductSlugForStep( state, ownProps.stepSlug ),

@@ -8,6 +8,8 @@ import { useSelect } from '@wordpress/data';
  */
 import { STORE_ID } from '../../state/store';
 
+let hasUncheckedItems = false;
+
 /**
  * Merges the list of installed extensions with the list of extensions that were checked for known vulnerabilities and return a normalized list to be used in the UI
  *
@@ -32,8 +34,16 @@ function mergeInstalledAndCheckedLists( installed, checked ) {
 				vulnerabilities: [],
 				notChecked: true,
 			} );
+			hasUncheckedItems = true;
 		}
 	}
+	newList.sort( ( a, b ) => {
+		const vulsA = a.vulnerabilities.length > 0 ? 2 : 0;
+		const vulsB = b.vulnerabilities.length > 0 ? 2 : 0;
+		const CheckedA = a.notChecked ? 1 : 0;
+		const CheckedB = b.notChecked ? 1 : 0;
+		return vulsB + CheckedB - ( vulsA + CheckedA );
+	} );
 	return newList;
 }
 /**
@@ -47,13 +57,15 @@ function normalizeCoreInformation( wpVersion, coreCheck ) {
 	let core;
 	if ( wpVersion && coreCheck && coreCheck.version === wpVersion ) {
 		core = coreCheck;
-		core.name = 'wp';
+		core.name = 'WordPress';
 	} else {
 		core = {
 			version: wpVersion,
 			vulnerabilities: [],
-			name: 'wp',
+			notChecked: true,
+			name: 'WordPress',
 		};
+		hasUncheckedItems = true;
 	}
 	return core;
 }
@@ -64,22 +76,28 @@ function normalizeCoreInformation( wpVersion, coreCheck ) {
  * @returns {object} The information available in Protect's initial state.
  */
 export default function useProtectData() {
-	const { installedPlugins, installedThemes, wpVersion, statusIsFetching, status } = useSelect(
-		select => ( {
-			installedPlugins: select( STORE_ID ).getInstalledPlugins(),
-			installedThemes: select( STORE_ID ).getInstalledThemes(),
-			wpVersion: select( STORE_ID ).getWpVersion(),
-			statusIsFetching: select( STORE_ID ).getStatusIsFetching(),
-			status: select( STORE_ID ).getStatus(),
-		} )
-	);
+	const {
+		installedPlugins,
+		installedThemes,
+		wpVersion,
+		statusIsFetching,
+		status,
+		securityBundle,
+	} = useSelect( select => ( {
+		installedPlugins: select( STORE_ID ).getInstalledPlugins(),
+		installedThemes: select( STORE_ID ).getInstalledThemes(),
+		wpVersion: select( STORE_ID ).getWpVersion(),
+		statusIsFetching: select( STORE_ID ).getStatusIsFetching(),
+		status: select( STORE_ID ).getStatus(),
+		securityBundle: select( STORE_ID ).getSecurityBundle(),
+	} ) );
 
 	const plugins = mergeInstalledAndCheckedLists( installedPlugins, status.plugins || {} );
 	const themes = mergeInstalledAndCheckedLists( installedThemes, status.themes || {} );
 	const core = normalizeCoreInformation( wpVersion, status.wordpress );
 
 	let currentStatus = 'error';
-	if ( statusIsFetching ) {
+	if ( true === statusIsFetching ) {
 		currentStatus = 'loading';
 	} else if ( status.status ) {
 		currentStatus = status.status;
@@ -87,12 +105,17 @@ export default function useProtectData() {
 
 	return {
 		numVulnerabilities: status.numVulnerabilities || 0,
+		numCoreVulnerabilities: core?.vulnerabilities?.length || 0,
 		numPluginsVulnerabilities: status.numPluginsVulnerabilities || 0,
 		numThemesVulnerabilities: status.numThemesVulnerabilities || 0,
 		lastChecked: status.lastChecked || null,
+		errorCode: status.errorCode || null,
+		errorMessage: status.errorMessage || null,
 		core,
 		plugins,
 		themes,
 		currentStatus,
+		hasUncheckedItems,
+		securityBundle,
 	};
 }
