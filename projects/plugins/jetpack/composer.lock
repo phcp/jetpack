@@ -1257,16 +1257,16 @@
         },
         {
             "name": "automattic/jetpack-publicize",
-            "version": "v0.2.0",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Automattic/jetpack-publicize.git",
-                "reference": "067e4a69961fe46fd1b377ddd4c5902c6e2014d9"
+                "reference": "d91905204a9b0acb3f08934726aca685be5308d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Automattic/jetpack-publicize/zipball/067e4a69961fe46fd1b377ddd4c5902c6e2014d9",
-                "reference": "067e4a69961fe46fd1b377ddd4c5902c6e2014d9",
+                "url": "https://api.github.com/repos/Automattic/jetpack-publicize/zipball/d91905204a9b0acb3f08934726aca685be5308d5",
+                "reference": "d91905204a9b0acb3f08934726aca685be5308d5",
                 "shasum": ""
             },
             "require": {
@@ -1301,9 +1301,9 @@
             ],
             "description": "Publicize makes it easy to share your site’s posts on several social media networks automatically when you publish a new post.",
             "support": {
-                "source": "https://github.com/Automattic/jetpack-publicize/tree/v0.2.0"
+                "source": "https://github.com/Automattic/jetpack-publicize/tree/v0.2.1"
             },
-            "time": "2022-05-04T14:50:07+00:00"
+            "time": "2022-05-10T17:06:59+00:00"
         },
         {
             "name": "automattic/jetpack-redirect",
